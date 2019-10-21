@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+{% from 'bootstrap/form.html' import render_form, render_field %}
+
+{% block title %}{{ post.user.username }}'s Post{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-8">
+
+                <h3 class="text-primary"><a href="{{ url_for('main.show_post', post_id=post.id) }}">{{ post.title }}</a></h3>
+                    <p>
+                    {{ post.body|striptags }}
+                    </p>
+                <small>
+                    评论: <a href="{{ url_for('main.show_post', post_id=post.id) }}#comments">{{ post.comments|length }}</a>&nbsp;&nbsp;
+                    分类: <a
+                        href="{{ url_for('main.show_category', category_id=post.category.id) }}">{{ post.category.name }}</a>
+                        <span class="float-right">{{ moment(post.timestamp).format('LL') }}</span>
+                </small>
+
+                <a class="btn btn-primary btn-sm text-white" data-toggle="modal" data-target="#share-modal">分享</a>
+                {% if current_user == post.user or current_user.can('ADMIN') %}
+                    <a class="btn btn-danger btn-sm text-white" data-toggle="modal" data-target="#confirm-delete"
+                       data-href="{{ url_for('user.delete_post', post_id=post.id) }}">删除</a>
+                {% endif %}
+                {% if current_user.is_authenticated and current_user != post.user %}
+                    <form class="inline" method="post" action="{{ url_for('user.report_post', post_id=post.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-link btn-sm">举报</button>
+                    </form>
+                {% endif %}
+
+            {% include 'main/_comment.html' %}
+        </div>
+        <div class="col-md-4">
+            {% include 'main/_post_sidebar.html' %}
+        </div>
+    </div>
+    <!-- share modal -->
+    <div class="modal fade" id="share-modal" tabindex="-1" role="dialog" aria-labelledby="shareModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="shareModalLabel">Permalink</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body w-100">
+                    <input class="form-control" value="{{ url_for('main.show_post', post_id=post.id, _external=True) }}"
+                           readonly>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- delete confirm modal -->
+    {% if current_user.is_authenticated %}
+        <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmModalLabel">确认删除</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>你确定想要删除吗?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <form class="delete-form" action="" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                            <button class="btn btn-danger btn-confirm" type="submit">删除</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

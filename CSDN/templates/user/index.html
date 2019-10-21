@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+{% from 'macros.html' import post_card %}
+
+{% block title %}{{ user.name }}{% endblock %}
+
+{% block content %}
+    {% include 'user/_header.html' %}
+    <div class="row">
+        <div class="col-md-12">
+            {% if posts %}
+                {% for post in posts %}
+                    <h3 class="text-primary"><a href="{{ url_for('main.show_post', post_id=post.id) }}">{{ post.title }}</a></h3>
+                    <p>
+                        {{ post.body|striptags|truncate }}
+                        <small><a href="{{ url_for('main.show_post', post_id=post.id) }}">更多</a></small>
+                        </p>
+                         <small>
+                             评论数: <a href="{{ url_for('main.show_post', post_id=post.id) }}#comments">{{ post.comments|length }}</a>&nbsp;&nbsp;
+                                分类: <a
+                        href="{{ url_for('main.show_category', category_id=post.category.id) }}">{{ post.category.name }}</a>
+                        <span class="float-right">{{ moment(post.timestamp).format('LL') }}</span>
+                        </small>
+                    {% if not loop.last %}
+                        <hr>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="tip text-center">
+                    <h3>No post.</h3>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% if posts %}
+        <div class="page-footer">
+            {{ render_pagination(pagination, align='center') }}
+        </div>
+    {% endif %}
+{% endblock %}

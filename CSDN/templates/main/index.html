@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+{% from 'macros.html' import post_card with context %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-md-center">
+        <div class="col-md-8">
+            {% if posts %}
+                {% for post in posts %}
+                    <h3 class="text-primary"><a href="{{ url_for('main.show_post', post_id=post.id) }}">{{ post.title }}</a></h3>
+                    <p>
+                        {{ post.body|striptags|truncate }}
+                        <small><a href="{{ url_for('main.show_post', post_id=post.id) }}">更多</a></small>
+                        </p>
+                         <small>
+                             Comments: <a href="{{ url_for('main.show_post', post_id=post.id) }}#comments">{{ post.comments|length }}</a>&nbsp;&nbsp;
+                                Category: <a
+                        href="{{ url_for('main.show_category', category_id=post.category.id) }}">{{ post.category.name }}</a>
+                        <span class="float-right">{{ moment(post.timestamp).format('LL') }}</span>
+                        </small>
+                    {% if not loop.last %}
+                        <hr>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="col-md-4">
+            {% include 'main/_sidebar.html' %}
+        </div>
+
+        {% if posts %}
+            {{ render_pagination(pagination, align='center') }}
+        {% endif %}
+    </div>
+{% endblock %}

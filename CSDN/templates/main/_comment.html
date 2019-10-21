@@ -1,0 +1,123 @@
+<div class="comments" id="comments">
+    <h3>{{ post.comments|length }} 条评论
+        <small>
+            <a href="{{ url_for('main.show_post', post_id=post.id, page=pagination.pages or 1) }}#comment-form">最后一条</a>
+        </small>
+        {% if current_user == post.user %}
+            <form class="inline" method="post" action="{{ url_for('user.set_comment', post_id=post.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-xs btn-link float-right">
+                    {% if post.can_comment %}Disable{% else %}Enable{% endif %} comment
+                </button>
+            </form>
+        {% endif %}
+    </h3>
+    <hr>
+    {% if comments %}
+        {% for comment in comments %}
+            <div class="comment">
+                <div class="comment-header">
+                    <a href="{{ url_for('user.index', username=comment.user.username) }}">
+                        {{ comment.user.username }}:
+                    </a>
+                </div>
+                <div class="comment-body">
+                    <h6>
+                        {% if comment.user.username == post.user.username %}
+                            <span class="badge badge-light">Author</span>
+                        {% endif %}
+                        <small data-toggle="tooltip" data-placement="top" data-timestamp="{{ comment.timestamp }}"
+                               data-delay="500">
+                            {{ moment(comment.timestamp).fromNow(refresh=True) }}
+                        </small>
+                        {% if current_user.is_authenticated %}
+                            <span class="float-right">
+                            <span class="dropdown">
+                                <button class="btn btn-sm btn-light" type="button" id="dropdownMenuButton"
+                                        data-toggle="dropdown"
+                                        aria-haspopup="true" aria-expanded="false">
+                                <span class="oi oi-ellipses"></span>
+                                </button>
+                                <span class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                {% if current_user != comment.user %}
+                                    <a class="dropdown-item btn"
+                                       href="{{ url_for('user.reply_comment', comment_id=comment.id) }}">
+                                    <span class="oi oi-comment-square"></span> 回复
+                                </a>
+                                {% endif %}
+                                {% if current_user == comment.user or current_user == post.user or current_user.can('ADMIN') %}
+                                    <a class="dropdown-item" data-toggle="modal" href="#!"
+                                       data-href="{{ url_for('user.delete_comment', comment_id=comment.id) }}"
+                                       data-target="#confirm-delete">
+                                    <span class="oi oi-trash" aria-hidden="true"></span> 删除
+                                  </a>
+                                {% endif %}
+                                {% if current_user != comment.user %}
+                                <form class="inline" method="post"
+                                      action="{{ url_for('user.report_comment', comment_id=comment.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="dropdown-item">
+                                        <span class="oi oi-warning" aria-hidden="true"></span> 举报
+                                      </button>
+                                </form>
+                                {% endif %}
+                                </span>
+                                </span>
+                            </span>
+                        {% endif %}
+                    </h6>
+                    <p>
+                        {#{% if comment.replied %}
+                            Reply
+                            <a href="{{ url_for('user.index', username=comment.replied.author.username) }}">{{ comment.replied.author.name }}</a>:
+                        {% endif %}#}
+                        {{ comment.body }}
+                    </p>
+                </div>
+            </div>
+            <hr>
+        {% endfor %}
+        <div class="page-footer">
+            {{ render_pagination(pagination) }}
+        </div>
+    {% else %}
+        <p class="tip">没有评论.</p>
+    {% endif %}
+
+    {% if post.can_comment %}
+        {% if current_user.is_authenticated %}
+            {% if current_user.can('COMMENT') %}
+                {% if request.args.get('reply') %}
+                    <div class="alert alert-dark">
+                        Reply to {{ request.args.get('author') }}:
+                        <a class="float-right" href="{{ url_for('main.show_post', post_id=post.id) }}">取消</a>
+                    </div>
+                {% endif %}
+                <div class="comment-form-area">
+                    <div class="comment-form-thumbnail">
+                        评论区
+                    </div>
+                    <div class="comment-form" id="comment-form">
+                        {{ render_form(comment_form, action=url_for('user.new_comment', post_id=post.id, page=pagination.pages or 1,
+                        reply=request.args.get('reply')),
+                        extra_classes="text-right") }}
+                    </div>
+                </div>
+            {% else %}
+                <p class="tip">
+                    No permission.
+                </p>
+            {% endif %}
+        {% else %}
+            <p class="tip">
+                <a href="{{ url_for('auth.login') }}">登录</a>
+                或
+                <a href="{{ url_for('auth.register') }}">注册</a> 后可评论.
+            </p>
+        {% endif %}
+    {% else %}
+        <p class="tip">
+            禁止评论.
+        </p>
+    {% endif %}
+</div>

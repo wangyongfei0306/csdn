@@ -1,0 +1,63 @@
+{% from 'macros.html' import follow_area with context %}
+
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('main.post_previous', post_id=post.id) }}">&larr;上一篇</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('main.post_next', post_id=post.id) }}">下一篇&rarr;</a>
+        </li>
+    </ul>
+</nav>
+
+<div class="card bg-light mb-3 w-100">
+    <div class="card-body">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
+                <span class="oi oi-person"></span> <a
+                    class="dropdown-item" href="{{ url_for('user.index', username=post.user.username) }}">
+                作者：{{ post.user.username }}</a>
+            </button>
+            <br>
+        {% if current_user.is_authenticated %}
+            {% if current_user.is_collecting(post) %}
+                <form class="inline" method="post"
+                      action="{{ url_for('user.uncollect', post_id=post.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                        <span class="oi oi-x"></span> 取消收藏
+                    </button>
+                </form>
+            {% else %}
+                <form class="inline" method="post"
+                      action="{{ url_for('user.collect', post_id=post.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                        <span class="oi oi-star"></span> 收藏
+                    </button>
+                </form>
+            {% endif %}
+        {% else %}
+            <form class="inline" method="post" action="{{ url_for('user.collect', post_id=post.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <span class="oi oi-star"></span> 收藏
+                </button>
+            </form>
+        {% endif %}
+        {% if post.collectors %}
+            <a href="{{ url_for('user.show_collectors', post_id=post.id) }}">{{ post.collectors|length }}
+                collectors</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if current_user == post.user or current_user.can('ADMIN') %}
+            <form class="inline" method="post" action="{{ url_for('user.edit_post', post_id=post.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <span class="oi oi-end"></span> 编辑文章
+                    </button>
+                </form>
+        {% endif %}
+    </div>
+</div>

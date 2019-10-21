@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+{% from 'bootstrap/form.html' import render_form %}
+{% from 'macros.html' import photo_card with context %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <h1>{{ category.name }}
+            <small class="text-muted">{{ category.posts|length }} posts</small>
+            {% if current_user.can('ADMIN') and category.name != 'Default' %}
+                <a class="btn btn-danger btn-sm" href="{{ url_for('admin.delete_category', category_id=category.id) }}"
+                   onclick="return confirm('Are you sure?')">
+                    Delete
+                </a>
+            {% endif %}
+            <span class="dropdown">
+            <button class="btn btn-secondary btn-sm" type="button" id="dropdownMenuButton" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                Order by {{ order_rule }} <span class="oi oi-elevator"></span>
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                {% if order_rule == 'collects' %}
+                    <a class="dropdown-item" href="{{ url_for('main.show_category', category_id=category.id, order='by_time') }}">Order by
+                    Time</a>
+                {% else %}
+                    <a class="dropdown-item" href="{{ url_for('main.show_category', category_id=category.id, order='by_collects') }}">Order by
+                    Collects</a>
+                {% endif %}
+            </div>
+        </span>
+        </h1>
+    </div>
+    <div class="row">
+        <div class="col-md-8">
+        {% if posts %}
+                {% for post in posts %}
+                    <h3 class="text-primary"><a href="{{ url_for('main.show_post', post_id=post.id) }}">{{ post.title }}</a></h3>
+                    <p>
+                        {{ post.body|striptags|truncate }}
+                        <small><a href="{{ url_for('main.show_post', post_id=post.id) }}">Read More</a></small>
+                        </p>
+                         <small>
+                             Comments: <a href="{{ url_for('main.show_post', post_id=post.id) }}#comments">{{ post.comments|length }}</a>&nbsp;&nbsp;
+                                Category: <a
+                        href="{{ url_for('main.show_category', category_id=post.category.id) }}">{{ post.category.name }}</a>
+                        <span class="float-right">{{ moment(post.timestamp).format('LL') }}</span>
+                        </small>
+                    {% if not loop.last %}
+                        <hr>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    <div class="page-footer">
+        {{ render_pagination(pagination, align='center') }}
+    </div>
+{% endblock %}

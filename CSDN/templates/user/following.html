@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+{% from 'macros.html' import user_card with context %}
+
+{% block title %}{{ user.name }}'s following{% endblock %}
+
+{% block content %}
+    {% include 'user/_header.html' %}
+    <div class="row">
+        <div class="col-md-12">
+                {% for follow in follows %}
+                    {% if follow.followed != user %}
+                        {{ user_card(user=follow.followed) }}
+                    {% endif %}
+                {% endfor %}
+        </div>
+    </div>
+{% endblock %}

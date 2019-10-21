@@ -1,0 +1,80 @@
+{% extends 'admin/index.html' %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+
+{% block title %}文章信息{% endblock %}
+
+{% block content %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {{ render_breadcrumb_item('admin.index', 'Dashboard Home') }}
+            {{ render_breadcrumb_item('admin.manage_post', 'Manage Post') }}
+        </ol>
+    </nav>
+    <div class="page-header">
+        <h1>Posts
+            <small class="text-muted">{{ pagination.total }}</small>
+            <span class="dropdown">
+            <button class="btn btn-secondary btn-sm" type="button" id="dropdownMenuButton" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                Order by {{ order_rule }} <span class="oi oi-elevator"></span>
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                {% if order_rule == 'flag' %}
+                    <a class="dropdown-item" href="{{ url_for('admin.manage_post', order='by_time') }}">Order by
+                    Time</a>
+                {% else %}
+                    <a class="dropdown-item" href="{{ url_for('admin.manage_post', order='by_flag') }}">Order by
+                    Flag</a>
+                {% endif %}
+            </div>
+        </span>
+        </h1>
+    </div>
+    {% if posts %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Email</th>
+                <th>Username</th>
+                <th>Reported</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            {% for post in posts %}
+                <tr>
+                    <td><a href="{{ url_for('main.show_post', post_id=post.id) }}">{{ post.title }}</a></td>
+                    <td>{{ post.category.name }}</td>
+                    <td>{{ post.user.email }}</td>
+                    <td>
+                        <a href="{{ url_for('user.index', username=post.user.username) }}">{{ post.user.username }}</a>
+                    </td>
+                    <td>{{ post.flag }}</td>
+                    <td>{{ moment(post.timestamp).format('LLL') }}</td>
+                    <td>
+                        <form class="inline" method="post"
+                              action="{{ url_for('user.delete_post', post_id=post.id, next=request.full_path) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Are you sure?');">Delete
+                            </button>
+                        </form>
+
+
+                        {% if current_user.is_admin %}
+                            <a class="btn btn-warning btn-sm"
+                               href="{{ url_for('user.edit_post', post_id=post.id) }}">Edit
+                                post</a>
+                        {% endif %}
+
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        <div class="page-footer">{{ render_pagination(pagination) }}</div>
+    {% else %}
+        <div class="tip"><h5>No posts.</h5></div>
+    {% endif %}
+{% endblock %}
